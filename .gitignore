@@ -1,0 +1,4 @@
+pgadmin-data/
+postgres-data/
+redis-data/
+server/

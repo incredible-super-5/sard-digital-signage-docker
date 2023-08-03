@@ -1,0 +1,64 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:15.3-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    healthcheck:
+       test: ["CMD-SHELL", "pg_isready -U postgres"]
+       interval: 5s
+       timeout: 5s
+       retries: 5
+  redis:
+    container_name: redis
+    image: redis:7.0.12-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/data
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: 1@1.com
+      PGADMIN_DEFAULT_PASSWORD: 1
+    ports:
+      - "5050:80"
+    volumes:
+      # - ./config/servers2.json:/pgadmin4/servers.json
+      - ./pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:80/misc/ping"]
+      interval: 300s
+      timeout: 10s
+      retries: 5
+    
+  # backend:
+  #   build:
+  #     context: ./server
+  #     dockerfile: Dockerfile.dev  # Replace with the path to your Dockerfile
+  #   command: python manage.py runserver 0.0.0.0:8000 & celery -A sard worker --loglevel=INFO"
+  #   ports:
+  #     - "8000:8000"
+  #   volumes:
+  #     - ./server:/server  # Replace with the path to your Django project directory
+  #     - /server/venv
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #   environment:
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #     - POSTGRES_HOST=postgres
+  #     - POSTGRES_PORT=5432
+  #     - POSTGRES_NAME=postgres
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
